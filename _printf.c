@@ -1,50 +1,43 @@
 #include "main.h"
-#include <stdarg.h>
-
 /**
- * _printf - prints a character to te stdout
- * @format: The format containing directives and specifers
- *
- * Return: On success count (the number of characters printed)
+ * _printf - printf function
+ * @format: const char pointer
+ * Return: b_len
  */
 int _printf(const char *format, ...)
 {
-	va_list aq;
-	char l;
-	int k, n, count;
-	char *m;
+	int (*pfunc)(va_list, flags_t *);
+	const char *p;
+	va_list arguments;
+	flags_t flags = {0, 0, 0};
 
-	k = count = 0;
-	va_start(aq, format);
-	for (k = 0; format[k] != '\0'; k++)
+	register int count = 0;
+
+	va_start(arguments, format);
+	if (!format || (format[0] == '%' && !format[1]))
+		return (-1);
+	if (format[0] == '%' && format[1] == ' ' && !format[2])
+		return (-1);
+	for (p = format; *p; p++)
 	{
-		if (format[k] != '%')
+		if (*p == '%')
 		{
-			if ((format[k] != 'c') && (format[k] != 's'))
+			p++;
+			if (*p == '%')
 			{
-				_putchar(format[k]);
-				count++;
+				count += _putchar('%');
+				continue;
 			}
-		}
-		else
-		{
-			if (format[k] == '%' && format[k + 1] == 'c')
-			{
-				l = va_arg(aq, int);
-				_putchar(l);
-				count++;
-			}
-			if (format[k] == '%' && format[k + 1] == 's')
-			{
-				m = va_arg(aq, char*);
-				for (n = 0; m[n] != '\0'; n++)
-				{
-					_putchar(m[n]);
-					count++;
-				}
-			}
-		}
+			while (get_flag(*p, &flags))
+				p++;
+			pfunc = get_print(*p);
+			count += (pfunc)
+				? pfunc(arguments, &flags)
+				: _printf("%%%c", *p);
+		} else
+			count += _putchar(*p);
 	}
-	va_end(aq);
+	_putchar(-1);
+	va_end(arguments);
 	return (count);
 }
